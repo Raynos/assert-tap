@@ -17,6 +17,9 @@ var commands = [
 ]
 
 var slice = Array.prototype.slice
+var queue = []
+
+Assert.test = test
 
 module.exports = Assert
 
@@ -80,4 +83,35 @@ function Assert(opts) {
     function end() {
         render.close()
     }
+}
+
+function test(name, cb) {
+    var assert = Assert()
+
+    queue.push([cb, assert, name])
+
+    if (queue.length === 1) {
+        process.nextTick(run)
+    }
+
+    return assert
+}
+
+function run() {
+    var item = queue.shift()
+    if (!item) {
+        return
+    }
+
+    var cb = item[0]
+    var assert = item[1]
+    var name = item[2]
+
+    assert.stream.once("end", run)
+
+    assert.stream.push({
+        name: name
+    })
+
+    cb(assert)
 }

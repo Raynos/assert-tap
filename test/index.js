@@ -66,7 +66,8 @@ test("tassert multiple", function (assert) {
         assert.deepEqual(list, [
             TAP_HEADER
             , "# test one"
-            , "ok 1 message"
+            , "ok 1 message a1"
+            , "ok 3 message 2 a1"
         ])
     }))
     a2.stream.pipe(toArray(function (list) {
@@ -74,11 +75,11 @@ test("tassert multiple", function (assert) {
 
         assert.deepEqual(list, [
             "# test two"
-            , "ok 2 message"
+            , "ok 2 message a2"
             , ""
-            , "1..2"
-            , "# tests 2"
-            , "# pass  2"
+            , "1..3"
+            , "# tests 3"
+            , "# pass  3"
             , ""
             , "# ok"
         ])
@@ -86,11 +87,18 @@ test("tassert multiple", function (assert) {
         assert.end()
     }))
 
-    a1(true, "message")
-    a2(true, "message")
+    process.nextTick(function () {
+        a1(true, "message a1")
+    })
 
-    a1.end()
-    a2.end()
+    process.nextTick(function () {
+        a2(true, "message a2")
+
+        a1(true, "message 2 a1")
+
+        a1.end()
+        a2.end()
+    })
 })
 
 test("other methods", function (assert) {
@@ -130,7 +138,7 @@ test("other methods", function (assert) {
     a.notStrictEqual({}, {})
     a.throws(function () {
         throw new Error("foo")
-    }, /foo/)
+    }, "foo")
     a.doesNotThrow(function () {
 
     })
@@ -181,4 +189,51 @@ test("assert.fail", function (assert) {
     a.fail("foo", "bar", "my message", "custom type")
 
     a.end()
+})
+
+test("assert.test macro", function (assert) {
+    var t = tassert.test
+    var finished = false
+
+    var t1 = t("first", function (a) {
+        a(true)
+
+        a.end()
+    })
+
+    t1.stream.pipe(toArray(function (list) {
+        finished = true
+
+        assert.deepEqual(list, [
+            TAP_HEADER
+            , "# first"
+            , "ok 1"
+        ])
+    }))
+
+    var t2 = t("second", function (a) {
+        assert.equal(finished, true)
+        a(true)
+
+        a.end()
+    })
+
+    t2.stream.pipe(toArray(function (list) {
+        assert.equal(finished, true)
+
+        assert.deepEqual(list, [
+            "# second"
+            , "ok 2"
+            , ""
+            , "1..2"
+            , "# tests 2"
+            , "# pass  2"
+            , ""
+            , "# ok"
+        ])
+
+        assert.end()
+    }))
+
+    assert.end()
 })
