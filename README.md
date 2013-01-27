@@ -1,4 +1,4 @@
-# tap-assert
+# assert-tap
 
 [![build status][1]][2]
 
@@ -9,7 +9,7 @@ Assert module but outputs TAP
 ## Example
 
 ```js
-var assert = require("tap-assert")("my example")
+var assert = require("assert-tap")("my example")
 
 // use the assert api
 assert.equal("one", "one")
@@ -22,7 +22,7 @@ assert.end()
 
 ## Installation
 
-`npm install tap-assert`
+`npm install assert-tap`
 
 ## Contributors
 
@@ -31,7 +31,7 @@ assert.end()
 ## MIT Licenced
 
 
-  [1]: https://secure.travis-ci.org/Raynos/tap-assert.png
-  [2]: http://travis-ci.org/Raynos/tap-assert
-  [3]: http://ci.testling.com/Raynos/tap-assert.png
-  [4]: http://ci.testling.com/Raynos/tap-assert
+  [1]: https://secure.travis-ci.org/Raynos/assert-tap.png
+  [2]: http://travis-ci.org/Raynos/assert-tap
+  [3]: http://ci.testling.com/Raynos/assert-tap.png
+  [4]: http://ci.testling.com/Raynos/assert-tap
