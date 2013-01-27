@@ -1,6 +1,6 @@
 {
   "name": "tap-assert",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Assert module but outputs TAP",
   "keywords": [],
   "author": "Raynos <raynos2@gmail.com>",
