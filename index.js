@@ -3,17 +3,9 @@ var ConsoleStream = require("console-stream")
 var assert = require("assert")
 
 var commands = [
-    ["fail", 2]
-    , ["ok", 1]
-    , ["equal", 2]
-    , ["notEqual", 2]
-    , ["deepEqual", 2]
-    , ["notDeepEqual", 2]
-    , ["strictEqual", 2]
-    , ["notStrictEqual", 2]
-    , ["throws", 3]
-    , ["doesNotThrow", 3]
-    , ["ifError"]
+    ["fail", 2], ["ok", 1], ["equal", 2], ["notEqual", 2], ["deepEqual", 2]
+    , ["notDeepEqual", 2], ["strictEqual", 2], ["notStrictEqual", 2]
+    , ["throws", 3], ["doesNotThrow", 3], ["ifError"]
 ]
 
 var slice = Array.prototype.slice
@@ -25,12 +17,13 @@ module.exports = Assert
 
 function Assert(opts) {
     opts = opts || {}
-    var render = Render(opts).pause()
-    var assertion = wrap("ok", 1)
 
     if (typeof opts === "string") {
         opts = { name: opts }
     }
+
+    var render = Render(opts).pause()
+    var assertion = wrap("ok", 1)
 
     render.begin()
 
@@ -39,7 +32,9 @@ function Assert(opts) {
     }
 
     assertion.stream = render
-    assertion.end = end
+    assertion.end = function end() {
+        render.close()
+    }
 
     process.nextTick(function pipeToConsole() {
         if (!render.piped) {
@@ -58,17 +53,12 @@ function Assert(opts) {
     return assertion
 
     function wrap(command, index) {
-        return assertion
-
-        function assertion() {
+        return function assertion() {
             var message = arguments[index]
 
             try {
                 assert[command].apply(assert, arguments)
-                render.push(null, {
-                    ok: true
-                    , name: message
-                })
+                render.push(null, { ok: true, name: message })
             } catch (err) {
                 render.push(null, {
                     ok: false
@@ -79,14 +69,10 @@ function Assert(opts) {
             }
         }
     }
-
-    function end() {
-        render.close()
-    }
 }
 
-function test(name, cb) {
-    var assert = Assert()
+function test(name, cb, opts) {
+    var assert = Assert(opts)
 
     queue.push([cb, assert, name])
 
@@ -103,15 +89,10 @@ function run() {
         return
     }
 
-    var cb = item[0]
     var assert = item[1]
-    var name = item[2]
 
     assert.stream.once("end", run)
+    assert.stream.push({ name: item[2] })
 
-    assert.stream.push({
-        name: name
-    })
-
-    cb(assert)
+    item[0](assert)
 }
