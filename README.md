@@ -9,7 +9,15 @@ Assert module but outputs TAP
 ## Example
 
 ```js
+var assert = require("tap-assert")("my example")
 
+// use the assert api
+assert.equal("one", "one")
+
+// outputs TAP to console.
+// it's that easy.
+// make sure to call assert.end() to end your example
+assert.end()
 ```
 
 ## Installation
