@@ -2,26 +2,37 @@ var Render = require("tap-render")
 var ConsoleStream = require("console-stream")
 var assert = require("assert")
 
-var begin = new String("begin")
-var close = new String("close")
+var commands = [
+    ["fail", 2]
+    , ["ok", 1]
+    , ["equal", 2]
+    , ["notEqual", 2]
+    , ["deepEqual", 2]
+    , ["notDeepEqual", 2]
+    , ["strictEqual", 2]
+    , ["notStrictEqual", 2]
+    , ["throws", 3]
+    , ["doesNotThrow", 3]
+    , ["ifError"]
+]
+
 var slice = Array.prototype.slice
 
 module.exports = Assert
 
 function Assert(opts) {
     opts = opts || {}
-    var render = Render(opts)
-    var queue = []
-    var ready = false
+    var render = Render(opts).pause()
+    var assertion = wrap("ok", 1)
 
     if (typeof opts === "string") {
         opts = { name: opts }
     }
 
-    push(begin)
+    render.begin()
 
     if (opts.name) {
-        push({ name: opts.name })
+        render.push({ name: opts.name })
     }
 
     assertion.stream = render
@@ -31,46 +42,42 @@ function Assert(opts) {
         if (!render.piped) {
             render.pipe(ConsoleStream())
         }
+
+        render.resume()
     })
 
-    process.nextTick(function flush() {
-        ready = true
-        queue.forEach(write)
-    })
+    for (var i = 0; i < commands.length; i++) {
+        var command = commands[i]
+        var name = command[0]
+        assertion[name] = wrap(name, command[1])
+    }
 
     return assertion
 
-    function assertion(boolean, arg) {
-        try {
-            assert.apply(null, arguments)
-            push(null, {
-                ok: true
-                , name: arg
-            })
-        } catch (err) {
-            
-        }
-    }
+    function wrap(command, index) {
+        return assertion
 
-    function push() {
-        var args = slice.call(arguments)
+        function assertion() {
+            var message = arguments[index]
 
-        ready ? write(args) : queue.push(args)
-    }
-
-    function write(args) {
-        var token = args[0]
-
-        if (token === begin) {
-            render.begin()
-        } else if (token === close) {
-            render.close()
-        } else {
-            render.push.apply(null, args)
+            try {
+                assert[command].apply(assert, arguments)
+                render.push(null, {
+                    ok: true
+                    , name: message
+                })
+            } catch (err) {
+                render.push(null, {
+                    ok: false
+                    , name: message
+                    , actual: err
+                    , operator: "error"
+                })
+            }
         }
     }
 
     function end() {
-        push(close)
+        render.close()
     }
 }

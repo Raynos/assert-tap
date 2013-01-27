@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "console-stream": "~0.1.0",
-    "tap-render": "~0.1.3"
+    "tap-render": "~0.1.6"
   },
   "devDependencies": {
     "tape": "~0.2.2",
